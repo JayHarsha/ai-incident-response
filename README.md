@@ -65,8 +65,8 @@ Java / Spring Boot (8080)                        Python / FastAPI (8000)
 
 ```bash
 # 1. Clone
-git clone https://github.com/<your-username>/incisight.git
-cd incisight
+git clone https://github.com/JayHarsha/ai-incident-response.git
+cd ai-incident-response
 
 # 2. Pull the LLM (one-time, ~2 GB)
 ollama pull llama3.2
