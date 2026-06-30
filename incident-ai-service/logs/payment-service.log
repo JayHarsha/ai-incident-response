@@ -1,0 +1,15 @@
+[2024-06-25 08:45:23] INFO  payment-service started on port 8080
+[2024-06-25 08:45:25] INFO  HikariPool-1 - Starting, maximum-pool-size=10
+[2024-06-25 08:45:26] INFO  HikariPool-1 - Start completed. pool size: 10
+[2024-06-25 09:12:45] INFO  TXN-1001: $150.00 processed in 45ms
+[2024-06-25 09:12:47] INFO  TXN-1002: $299.99 processed in 52ms
+[2024-06-25 09:15:32] WARN  HikariPool-1 - Connection pool utilisation at 80% (8/10)
+[2024-06-25 09:15:45] INFO  Transaction queue length: 12 pending
+[2024-06-25 09:18:01] WARN  HikariPool-1 - Connection pool utilisation at 90% (9/10)
+[2024-06-25 09:20:15] ERROR HikariPool-1 - Connection is not available, request timed out after 30000ms
+[2024-06-25 09:20:15] ERROR com.payments.PaymentService - Failed to process TXN-1015: DB connection unavailable
+[2024-06-25 09:20:16] CRITICAL HikariPool-1 - Connection pool exhausted - rejecting new connections
+[2024-06-25 09:20:17] ERROR 23 transactions failed to acquire DB connection in last 60s
+[2024-06-25 09:20:45] ERROR HikariPool-1 - Connection is not available, request timed out after 30000ms
+[2024-06-25 09:21:00] WARN  Active DB connections: 10/10 — all connections held by long-running batch queries
+[2024-06-25 09:21:30] ERROR Batch analytics job holding 7 connections for >120s

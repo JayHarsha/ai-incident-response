@@ -1,0 +1,47 @@
+{
+  "payment-service": {
+    "upstream_dependencies": ["postgres-db", "payment-gateway-api", "fraud-detection-service"],
+    "downstream_dependents": ["order-service", "billing-service", "notification-service"],
+    "critical": true,
+    "team": "payments-team",
+    "oncall": "payments-oncall@company.com",
+    "sla_response_minutes": 15,
+    "typical_rps": 500
+  },
+  "auth-service": {
+    "upstream_dependencies": ["postgres-db", "redis-cache", "ldap-provider", "oauth-provider"],
+    "downstream_dependents": ["all-services"],
+    "critical": true,
+    "team": "platform-team",
+    "oncall": "platform-oncall@company.com",
+    "sla_response_minutes": 5,
+    "typical_rps": 2000
+  },
+  "order-service": {
+    "upstream_dependencies": ["auth-service", "payment-service", "inventory-service", "postgres-db"],
+    "downstream_dependents": ["shipping-service", "analytics-service", "notification-service"],
+    "critical": true,
+    "team": "orders-team",
+    "oncall": "orders-oncall@company.com",
+    "sla_response_minutes": 15,
+    "typical_rps": 300
+  },
+  "inventory-service": {
+    "upstream_dependencies": ["postgres-db", "redis-cache"],
+    "downstream_dependents": ["order-service", "admin-portal"],
+    "critical": true,
+    "team": "inventory-team",
+    "oncall": "inventory-oncall@company.com",
+    "sla_response_minutes": 30,
+    "typical_rps": 150
+  },
+  "notification-service": {
+    "upstream_dependencies": ["kafka", "email-provider", "sms-provider"],
+    "downstream_dependents": [],
+    "critical": false,
+    "team": "platform-team",
+    "oncall": "platform-oncall@company.com",
+    "sla_response_minutes": 60,
+    "typical_rps": 50
+  }
+}

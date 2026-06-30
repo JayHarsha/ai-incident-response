@@ -1,0 +1,17 @@
+[2024-06-25 10:00:00] INFO  notification-service started on port 8085
+[2024-06-25 10:00:05] INFO  Kafka consumer connected — group: notification-service-group topic: order-events
+[2024-06-25 10:00:10] INFO  Notification service ready
+[2024-06-25 10:00:15] INFO  Consumer lag: 0 messages on topic 'order-events'
+[2024-06-25 10:05:00] INFO  Notification dispatched: email → user@example.com (ORD-5001)
+[2024-06-25 10:05:50] INFO  Email template render time: 45ms (external template service)
+[2024-06-25 10:10:00] INFO  notification-service v1.8.0 deployed — new HTML email templates
+[2024-06-25 10:10:30] WARN  Consumer lag increasing: 500 messages behind
+[2024-06-25 10:15:00] WARN  Consumer poll timeout exceeded — processing 450ms/msg (target: 50ms)
+[2024-06-25 10:20:00] WARN  Consumer lag: 5,000 messages behind
+[2024-06-25 10:30:00] WARN  Consumer lag: 20,000 messages behind
+[2024-06-25 10:45:00] ERROR Consumer lag: 50,000 messages behind — SLA breach imminent
+[2024-06-25 11:00:00] ERROR Consumer lag: 80,412 messages — notifications delayed >4 hours
+[2024-06-25 11:00:05] ERROR Template render time: 450ms/msg — external HTTP call not cached
+[2024-06-25 13:15:00] INFO  Email template caching enabled (Caffeine, TTL=10min)
+[2024-06-25 13:15:30] INFO  Processing time per message: 60ms — back to normal
+[2024-06-25 14:00:00] INFO  Consumer lag: 0 — fully caught up

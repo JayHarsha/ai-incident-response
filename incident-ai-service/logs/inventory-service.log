@@ -1,0 +1,15 @@
+[2024-06-25 18:00:00] INFO  inventory-service started on port 8084
+[2024-06-25 18:00:03] INFO  HikariPool-1 - Start completed. pool size: 8
+[2024-06-25 18:00:05] INFO  Redis cache connected: redis:6379
+[2024-06-25 18:00:10] INFO  Inventory service ready
+[2024-06-25 18:04:00] INFO  Flash sale event starting — stock checks expected at 5x normal rate
+[2024-06-25 18:04:10] INFO  Stock check: SKU-4521 — 250 units available
+[2024-06-25 18:04:45] ERROR could not serialize access due to concurrent update on table 'inventory'
+[2024-06-25 18:04:45] ERROR org.hibernate.exception.LockAcquisitionException: could not execute statement
+[2024-06-25 18:04:46] WARN  Deadlock detected between transactions 7823 and 7829 on table 'inventory'
+[2024-06-25 18:04:47] INFO  PostgreSQL aborted transaction 7829 to resolve deadlock
+[2024-06-25 18:05:00] ERROR Deadlock rate: 12/minute — threshold exceeded (5/minute)
+[2024-06-25 18:05:15] WARN  Batch reconciliation job holding locks on 'reservations' table
+[2024-06-25 18:05:30] ERROR 15% of stock reservation requests failing with LockAcquisitionException
+[2024-06-25 18:30:00] INFO  Batch reconciliation job suspended
+[2024-06-25 18:40:00] INFO  Deadlock rate: 0/minute — normal operations resumed

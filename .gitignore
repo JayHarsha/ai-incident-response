@@ -1,0 +1,37 @@
+# ─── Java ────────────────────────────────────────────────────────────────────
+incident-service/target/
+incident-service/.mvn/wrapper/maven-wrapper.jar
+incident-service/HELP.md
+*.class
+*.jar
+*.war
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+incident-ai-service/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+incident-ai-service/.env
+
+# ─── Node / React ────────────────────────────────────────────────────────────
+incident-dashboard/node_modules/
+incident-dashboard/dist/
+incident-dashboard/.vite/
+
+# ─── IDEs ────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.iml
+*.iws
+*.ipr
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+docker-compose.override.yml

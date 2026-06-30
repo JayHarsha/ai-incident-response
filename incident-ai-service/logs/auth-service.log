@@ -1,0 +1,16 @@
+[2024-06-25 14:00:01] INFO  auth-service started on port 8082
+[2024-06-25 14:00:03] INFO  JWT token cache initialised (ConcurrentHashMap, unbounded)
+[2024-06-25 14:00:05] INFO  Redis cache connected: redis:6379
+[2024-06-25 14:00:10] INFO  Auth service ready — accepting requests
+[2024-06-25 14:15:00] INFO  Promotional campaign emails sent — login traffic spike expected
+[2024-06-25 14:15:30] INFO  Login requests/sec: 450 (normal: 120)
+[2024-06-25 14:30:00] WARN  JVM heap usage: 65% (1.3GB/2GB)
+[2024-06-25 14:35:00] WARN  JVM heap usage: 75% (1.5GB/2GB)
+[2024-06-25 14:40:00] WARN  JWT token cache size: 850,000 entries
+[2024-06-25 14:42:00] ERROR JVM heap usage: 90% — GC pressure increasing
+[2024-06-25 14:44:00] ERROR GC overhead limit exceeded — spending 97% time in garbage collection
+[2024-06-25 14:45:00] CRITICAL java.lang.OutOfMemoryError: Java heap space
+[2024-06-25 14:45:01] CRITICAL java.lang.OutOfMemoryError: GC overhead limit exceeded
+[2024-06-25 14:45:02] ERROR auth-service process terminated unexpectedly
+[2024-06-25 14:45:10] INFO  Kubernetes restarting auth-service pod (OOMKilled)
+[2024-06-25 14:46:00] INFO  auth-service restarted — JWT cache cleared
