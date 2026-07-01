@@ -9,11 +9,8 @@ from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph
 
 from app.agent.prompts import ANALYSIS_PROMPT, CLASSIFICATION_PROMPT, SYSTEM_PROMPT
-from app.mcp.tools import (
-    get_recent_logs,
-    get_service_dependencies,
-    update_incident_status,
-)
+from app.mcp.client import McpClient
+from app.mcp.tools import get_recent_logs, get_service_dependencies
 from app.models.incident import AnalysisResult, IncidentEvent
 from app.producer.kafka_producer import IncidentKafkaProducer
 from app.rag.qdrant_client import QdrantService
@@ -37,9 +34,10 @@ class AgentState(TypedDict):
 
 class IncidentAgent:
 
-    def __init__(self, qdrant: QdrantService, producer: IncidentKafkaProducer, ollama_url: str):
+    def __init__(self, qdrant: QdrantService, producer: IncidentKafkaProducer, ollama_url: str, mcp_client: McpClient):
         self.qdrant = qdrant
         self.producer = producer
+        self.mcp = mcp_client
         self.llm = ChatOllama(base_url=ollama_url, model="llama3.2", temperature=0.1, num_predict=1024)
         self.on_progress: Callable[[str, str], None] | None = None  # set from main.py
         self.graph = self._build_graph()
@@ -72,7 +70,10 @@ class IncidentAgent:
 
     def process_incident(self, incident: IncidentEvent) -> None:
         logger.info("Agent starting analysis for %s", incident.incidentId)
-        update_incident_status(incident.incidentId, "ANALYZING")
+        self.mcp.call_tool("update_incident_status", {
+            "incident_id": incident.incidentId,
+            "status": "ANALYZING",
+        })
 
         state: AgentState = {
             "incident": incident,

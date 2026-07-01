@@ -25,13 +25,18 @@ React Dashboard (3000)
       ▼
 incident-service  ──Kafka: incident-created──▶  incident-ai-service
 Java / Spring Boot (8080)                        Python / FastAPI (8000)
-      │                                                │
-      ▼                                        ┌──────┴──────┐
-  PostgreSQL (5433)                         Qdrant        Ollama
-                                           vectors       local LLM
+      │  ◀──── MCP (JSON-RPC 2.0) ─────────────────────┤
+      │                                          ┌──────┴──────┐
+      ▼                                       Qdrant        Ollama
+  PostgreSQL (5433)                          vectors       local LLM
       ▲                                        └──────┬──────┘
       └──────Kafka: incident-analyzed──────────────────┘
 ```
+
+**Three communication protocols in use:**
+- **REST** — React dashboard ↔ Java (synchronous CRUD)
+- **Kafka** — Java ↔ Python AI agent (async event streaming)
+- **MCP** — Python AI agent → Java (tool calls via JSON-RPC 2.0 protocol)
 
 ---
 
@@ -179,9 +184,9 @@ npm install && npm run dev      # opens at localhost:3000
 ## Tech Stack
 
 ```
-Java 21 · Spring Boot 4.1 · Spring Kafka · Spring Data JPA · PostgreSQL 17 · HikariCP
-Python 3.11 · FastAPI · LangGraph 0.2 · LangChain · ChatOllama (llama3.2)
+Java 21 · Spring Boot 4.1 · Spring Kafka · Spring Data JPA · PostgreSQL 17 · HikariCP · MCP Server
+Python 3.11 · FastAPI · LangGraph 0.2 · LangChain · ChatOllama (llama3.2) · MCP Client
 Sentence Transformers (all-MiniLM-L6-v2) · Qdrant · kafka-python · Pydantic v2 · httpx
 React 19 · Vite 8 · TailwindCSS v4 · React Router v7 · Axios · Native WebSocket
-Apache Kafka (KRaft) · Docker · nginx
+Apache Kafka (KRaft) · Model Context Protocol (MCP) · Docker · nginx
 ```

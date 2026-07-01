@@ -23,6 +23,19 @@ Spring Boot 4.1 service. Owns the incident lifecycle: REST API, Postgres persist
 | `PUT` | `/api/v1/incidents/{id}/status` | Update status |
 | `GET` | `/api/v1/incidents/service/{name}` | Filter by service |
 
+### MCP Server — `POST /mcp`
+
+The service also acts as an **MCP server** (Model Context Protocol, JSON-RPC 2.0) for the Python AI agent.
+
+| MCP Method | Description |
+|---|---|
+| `initialize` | Protocol handshake |
+| `tools/list` | Discover available tools |
+| `tools/call` → `update_incident_status` | Update incident status via MCP protocol |
+| `tools/call` → `get_incident` | Fetch full incident details |
+
+The Python AI agent uses the MCP client to call `update_incident_status` instead of a raw REST call — this separates the AI tool interface from the user-facing REST API.
+
 ### Create — example request
 
 ```json

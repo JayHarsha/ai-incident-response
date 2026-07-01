@@ -77,6 +77,24 @@ Late-connecting clients receive full history replay on connect.
 
 ---
 
+## MCP Client
+
+The agent uses a lightweight **MCP client** (`app/mcp/client.py`) to call tools on the Java MCP server via JSON-RPC 2.0 (Streamable HTTP transport).
+
+```
+Agent calls:  mcp.call_tool("update_incident_status", {...})
+  → POST /mcp  {"jsonrpc":"2.0","method":"tools/call","params":{...}}
+  ← {"result": {"content": [{"type":"text","text":"Status updated to ANALYZING"}]}}
+```
+
+Protocol flow per incident:
+1. `initialize` — handshake with Java MCP server
+2. `tools/call: update_incident_status` — set status → ANALYZING before pipeline starts
+
+The MCP server on the Java side also exposes `get_incident` for ad-hoc tool discovery.
+
+---
+
 ## Tech Stack
 
 | | |
@@ -88,7 +106,8 @@ Late-connecting clients receive full history replay on connect.
 | Embeddings | Sentence Transformers — all-MiniLM-L6-v2 |
 | Vector DB | Qdrant — cosine similarity |
 | Messaging | kafka-python 2.0 |
-| HTTP client | httpx (async) |
+| Tool protocol | MCP (Model Context Protocol) — JSON-RPC 2.0 over HTTP |
+| HTTP client | httpx |
 
 ---
 

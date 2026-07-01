@@ -63,6 +63,7 @@ async def lifespan(app: FastAPI):
     from app.rag.document_loader import DocumentLoader
     from app.rag.qdrant_client import QdrantService
     from app.producer.kafka_producer import IncidentKafkaProducer
+    from app.mcp.client import McpClient
     from app.agent.incident_agent import IncidentAgent
     from app.consumer.kafka_consumer import IncidentKafkaConsumer
 
@@ -71,8 +72,11 @@ async def lifespan(app: FastAPI):
     docs = DocumentLoader(KB_PATH).load_all_documents()
     qdrant.sync_documents(docs)
 
+    mcp_client = McpClient(java_service_url=JAVA_SERVICE_URL)
+    logger.info("MCP client configured → %s/mcp", JAVA_SERVICE_URL)
+
     producer = IncidentKafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP, topic=KAFKA_OUTPUT_TOPIC)
-    agent = IncidentAgent(qdrant=qdrant, producer=producer, ollama_url=OLLAMA_URL)
+    agent = IncidentAgent(qdrant=qdrant, producer=producer, ollama_url=OLLAMA_URL, mcp_client=mcp_client)
     agent.on_progress = _emit_progress  # wire the callback
 
     _consumer = IncidentKafkaConsumer(
