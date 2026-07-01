@@ -25,6 +25,7 @@ KAFKA_GROUP = os.getenv("KAFKA_CONSUMER_GROUP", "incident-ai-group")
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+JAVA_SERVICE_URL = os.getenv("JAVA_SERVICE_URL", "http://localhost:8080")
 KB_PATH = os.getenv("KNOWLEDGE_BASE_PATH", "./knowledge_base")
 
 # ─── WebSocket progress state ─────────────────────────────────────────────────

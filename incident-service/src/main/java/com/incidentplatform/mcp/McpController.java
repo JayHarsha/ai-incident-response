@@ -65,6 +65,20 @@ public class McpController {
         }
     }
 
+    /**
+     * MCP Streamable HTTP transport: client opens GET to receive server-sent events.
+     * This server is stateless (no server-to-client pushes), so return an empty SSE stream.
+     * Without this, the SDK sees 405 and logs a noisy reconnect loop.
+     */
+    @GetMapping(produces = "text/event-stream")
+    public ResponseEntity<String> sseStream(
+            @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId) {
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache")
+                .header("X-Accel-Buffering", "no")
+                .body("");
+    }
+
     /** Client may DELETE the session to signal it's done — stateless server just acknowledges. */
     @DeleteMapping
     public ResponseEntity<Void> deleteSession(

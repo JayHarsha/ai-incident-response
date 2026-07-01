@@ -100,13 +100,13 @@ The MCP server on the Java side also exposes `get_incident` for ad-hoc tool disc
 | | |
 |---|---|
 | Runtime | Python 3.11 |
-| API | FastAPI 0.115 + uvicorn |
+| API | FastAPI 0.138 + uvicorn |
 | AI | LangGraph 0.2 + LangChain 0.3 |
-| LLM | Ollama — llama3.2, temperature=0.1, num_predict=1024 |
+| LLM | Ollama — llama3.2, temperature=0.1, num_predict=2048 (JSON mode for analysis) |
 | Embeddings | Sentence Transformers — all-MiniLM-L6-v2 |
 | Vector DB | Qdrant — cosine similarity |
 | Messaging | kafka-python 2.0 |
-| Tool protocol | MCP (Model Context Protocol) — JSON-RPC 2.0 over HTTP |
+| MCP client | mcp 1.28.1 — ClientSession + streamablehttp_client |
 | HTTP client | httpx |
 
 ---

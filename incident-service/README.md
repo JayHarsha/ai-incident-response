@@ -10,6 +10,7 @@ Spring Boot 4.1 service. Owns the incident lifecycle: REST API, Postgres persist
 - Persists incidents to PostgreSQL
 - Publishes incident JSON to Kafka `incident-created` on creation
 - Consumes AI results from Kafka `incident-analyzed`, writes them back to Postgres
+- **MCP server** at `POST /mcp` — exposes tools for the Python AI agent via JSON-RPC 2.0
 
 ---
 
@@ -76,6 +77,7 @@ OPEN → ANALYZING (Python MCP) → ANALYZED (Kafka consumer) → RESOLVED (user
 | Persistence | Spring Data JPA + Hibernate + PostgreSQL 17 |
 | Pool | HikariCP (fixed 10-connection pool) |
 | Messaging | Spring Kafka (producer + consumer) |
+| MCP server | Custom JSON-RPC 2.0 controller at `POST /mcp` |
 | Boilerplate | Lombok |
 
 ---

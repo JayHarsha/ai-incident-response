@@ -1,5 +1,6 @@
 """LangGraph agent — the main AI brain of the incident platform."""
 
+import json
 import logging
 import re
 from typing import Any, Callable, TypedDict
@@ -38,7 +39,10 @@ class IncidentAgent:
         self.qdrant = qdrant
         self.producer = producer
         self.mcp = mcp_client
-        self.llm = ChatOllama(base_url=ollama_url, model="llama3.2", temperature=0.1, num_predict=1024)
+        self.llm = ChatOllama(base_url=ollama_url, model="llama3.2", temperature=0.1, num_predict=256)
+        # JSON-mode LLM for analysis — forces valid JSON output and allows longer generation
+        self.analysis_llm = ChatOllama(base_url=ollama_url, model="llama3.2", temperature=0.1,
+                                       num_predict=2048, format="json")
         self.on_progress: Callable[[str, str], None] | None = None  # set from main.py
         self.graph = self._build_graph()
 
@@ -146,7 +150,7 @@ class IncidentAgent:
             f"RAG — Similar Past Incidents & Runbooks:\n{rag_text[:1200]}"
         )
         prompt = ANALYSIS_PROMPT.format(context=context)
-        response = self.llm.invoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
+        response = self.analysis_llm.invoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
         return {"analysis_text": response.content}
 
     def _publish(self, state: AgentState) -> dict:
@@ -159,65 +163,68 @@ class IncidentAgent:
     # ── Parser ───────────────────────────────────────────────────────────────
 
     def _parse_analysis(self, incident_id: str, text: str, state: AgentState) -> AnalysisResult:
-        # Strip markdown formatting the LLM adds despite being told not to
-        clean = re.sub(r"\*+", "", text)
-        clean = re.sub(r"`+", "", clean)
-        clean = re.sub(r"^#+\s*", "", clean, flags=re.MULTILINE)
-
         root_cause = ""
         impacted: list[str] = []
         steps: list[str] = []
         similar: list[str] = []
-        confidence = 0.5
-        current_section = ""
 
-        for line in clean.splitlines():
-            stripped = line.strip()
-            lower = stripped.lower()
-            if not stripped:
-                continue
+        # ── Primary: JSON parsing (LLM runs in format="json" mode) ──────────
+        try:
+            # Strip any accidental code fences the LLM might still add
+            clean_json = re.sub(r"^```(?:json)?\s*", "", text.strip(), flags=re.MULTILINE)
+            clean_json = re.sub(r"```\s*$", "", clean_json.strip(), flags=re.MULTILINE)
+            data = json.loads(clean_json.strip())
 
-            # Use re.search so headers are found anywhere on the line,
-            # not just at the start — handles LLM preamble like "Incident Report Root Cause:"
-            if re.search(r"root\s*cause\s*:", lower):
-                m = re.search(r"root\s*cause\s*:\s*(.+)", stripped, re.IGNORECASE)
-                if m:
-                    root_cause = m.group(1).strip()
-                current_section = "root_cause"  # capture next line if inline text missing
-            elif current_section == "root_cause" and not root_cause and not re.search(r"impacted|remediation|similar|confidence", lower):
-                root_cause = stripped
-                current_section = ""
-            elif re.search(r"impacted\s*services", lower):
-                current_section = "impacted"
-            elif re.search(r"remediation\s*steps|recommended\s*steps", lower):
-                current_section = "steps"
-            elif re.search(r"similar\s*past\s*incidents", lower):
-                current_section = "similar"
-            elif re.search(r"confidence\s*:", lower):
-                m = re.search(r"confidence\s*:\s*([\d.]+)", stripped, re.IGNORECASE)
-                if m:
-                    try:
-                        val = float(m.group(1))
-                        confidence = val / 100 if val > 1 else val
-                    except ValueError:
-                        pass
-            elif re.match(r"^[-•*]\s+\S", stripped) or re.match(r"^\d+[.)]\s+\S", stripped):
-                item = re.sub(r"^[-•*\d][.)]\s*", "", stripped).strip()
-                item = re.sub(r"^-\s*", "", item).strip()
-                if item:
-                    if current_section == "impacted":
-                        impacted.append(item)
-                    elif current_section == "steps":
-                        steps.append(item)
-                    elif current_section == "similar":
-                        similar.append(item)
+            root_cause = str(data.get("rootCause", "")).strip()
+            impacted = [str(s).strip() for s in data.get("impactedServices", []) if s]
+            steps = [str(s).strip() for s in data.get("remediationSteps", []) if s]
+            similar = [str(s).strip() for s in data.get("similarPastIncidents", []) if s]
+            logger.debug("JSON parse succeeded for %s: %d steps, %d similar", incident_id, len(steps), len(similar))
+
+        except (json.JSONDecodeError, Exception) as exc:
+            # ── Fallback: regex parsing (handles non-JSON responses) ─────────
+            logger.warning("JSON parse failed for %s (%s) — falling back to regex", incident_id, exc)
+            clean = re.sub(r"\*+", "", text)
+            clean = re.sub(r"`+", "", clean)
+            clean = re.sub(r"^#+\s*", "", clean, flags=re.MULTILINE)
+            current_section = ""
+
+            for line in clean.splitlines():
+                stripped = line.strip()
+                lower = stripped.lower()
+                if not stripped:
+                    continue
+
+                if re.search(r"root\s*cause\s*:", lower):
+                    m = re.search(r"root\s*cause\s*:\s*(.+)", stripped, re.IGNORECASE)
+                    if m:
+                        root_cause = m.group(1).strip()
+                    current_section = "root_cause"
+                elif current_section == "root_cause" and not root_cause and not re.search(r"impacted|remediation|similar|confidence", lower):
+                    root_cause = stripped
+                    current_section = ""
+                elif re.search(r"impacted\s*services", lower):
+                    current_section = "impacted"
+                elif re.search(r"remediation\s*steps|recommended\s*steps", lower):
+                    current_section = "steps"
+                elif re.search(r"similar\s*past\s*incidents", lower):
+                    current_section = "similar"
+                elif re.match(r"^[-•*]\s+\S", stripped) or re.match(r"^\d+[.)]\s+\S", stripped):
+                    item = re.sub(r"^[-•*\d][.)]\s*", "", stripped).strip()
+                    item = re.sub(r"^-\s*", "", item).strip()
+                    if item:
+                        if current_section == "impacted":
+                            impacted.append(item)
+                        elif current_section == "steps":
+                            steps.append(item)
+                        elif current_section == "similar":
+                            similar.append(item)
 
         if not root_cause:
-            # Last resort: grab the first non-empty sentence from the response
-            sentences = [s.strip() for s in re.split(r"[.\n]", clean) if len(s.strip()) > 20]
-            root_cause = sentences[0] if sentences else clean[:200].replace("\n", " ")
+            sentences = [s.strip() for s in re.split(r"[.\n]", text) if len(s.strip()) > 20]
+            root_cause = sentences[0] if sentences else text[:200].replace("\n", " ")
 
-        # Match a runbook from RAG results — extract just the title, not raw content
+        # Match a runbook from RAG results — extract just the title
         matched_runbook = None
         for r in state.get("rag_results", []):
             if "runbook" in r.lower():
@@ -226,9 +233,7 @@ class IncidentAgent:
                 matched_runbook = title
                 break
 
-        # Override LLM-reported confidence with evidence-based scoring.
-        # The LLM consistently over-reports confidence, so we compute it
-        # deterministically from what evidence was actually available.
+        # Evidence-based confidence scoring — never trust LLM self-report
         inc = state["incident"]
         has_logs = bool(state.get("logs", "").strip()) and "not found" not in state.get("logs", "").lower()
         has_stack_trace = bool(inc.stackTrace) if hasattr(inc, "stackTrace") else False
@@ -237,11 +242,11 @@ class IncidentAgent:
         if has_logs or has_stack_trace:
             evidence_confidence = 0.6
             if has_rag:
-                evidence_confidence += 0.2   # logs + past match = up to 0.8
+                evidence_confidence += 0.2
         elif has_rag:
-            evidence_confidence = 0.5        # runbook/past match only = 0.5
+            evidence_confidence = 0.5
         else:
-            evidence_confidence = 0.3        # error message only = 0.3
+            evidence_confidence = 0.3
 
         return AnalysisResult(
             incidentId=incident_id,
