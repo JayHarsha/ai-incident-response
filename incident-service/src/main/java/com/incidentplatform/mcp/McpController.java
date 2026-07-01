@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/mcp")
@@ -28,18 +29,26 @@ public class McpController {
         String method = (String) request.get("method");
         Object id = request.get("id");
 
-        // Notifications have no id and need no response body
+        // Notifications have no id and expect no response body
         if (method != null && method.startsWith("notifications/")) {
             return ResponseEntity.ok(Map.of());
         }
 
         try {
             return switch (method != null ? method : "") {
-                case "initialize" -> respond(id, Map.of(
-                        "protocolVersion", "2024-11-05",
-                        "serverInfo", Map.of("name", "incident-service", "version", "1.0.0"),
-                        "capabilities", Map.of("tools", Map.of())
-                ));
+                case "initialize" ->
+                    // Return Mcp-Session-Id header as required by the Streamable HTTP transport spec
+                    ResponseEntity.ok()
+                            .header("Mcp-Session-Id", UUID.randomUUID().toString())
+                            .body(Map.of(
+                                    "jsonrpc", "2.0",
+                                    "id", id,
+                                    "result", Map.of(
+                                            "protocolVersion", "2024-11-05",
+                                            "serverInfo", Map.of("name", "incident-service", "version", "1.0.0"),
+                                            "capabilities", Map.of("tools", Map.of())
+                                    )
+                            ));
                 case "tools/list" -> respond(id, Map.of("tools", toolService.definitions()));
                 case "tools/call" -> {
                     Map<String, Object> params = (Map<String, Object>) request.get("params");
@@ -54,6 +63,14 @@ public class McpController {
             log.error("MCP tool execution failed for method={}: {}", method, e.getMessage());
             return error(id, -32603, e.getMessage());
         }
+    }
+
+    /** Client may DELETE the session to signal it's done — stateless server just acknowledges. */
+    @DeleteMapping
+    public ResponseEntity<Void> deleteSession(
+            @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId) {
+        log.debug("MCP session terminated: {}", sessionId);
+        return ResponseEntity.ok().build();
     }
 
     private ResponseEntity<Map<String, Object>> respond(Object id, Map<String, Object> result) {

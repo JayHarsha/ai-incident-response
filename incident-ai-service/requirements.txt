@@ -1,5 +1,5 @@
 # API Framework
-fastapi==0.115.0
+fastapi==0.138.2
 uvicorn[standard]==0.30.6
 
 # Kafka (kafka-python for simpler thread-based consumer)
@@ -19,13 +19,16 @@ qdrant-client==1.11.3
 sentence-transformers==3.2.1
 
 # Data validation (like Java DTOs)
-pydantic==2.9.2
+pydantic==2.13.4
 
 # Environment variables
 python-dotenv==1.0.1
 
-# HTTP client (for MCP tools calling Java backend)
+# HTTP client (used by mcp SDK internally)
 httpx==0.27.2
+
+# Model Context Protocol — official SDK (ClientSession, streamablehttp_client)
+mcp==1.28.1
 
 # PostgreSQL (optional — direct DB queries in MCP tools)
 psycopg2-binary==2.9.9
